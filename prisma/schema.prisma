@@ -1,7 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Skillbridge — Prisma schema (Prisma 7)
+// Generator: prisma-client, output to server/generated/prisma
+// Datasource URL supplied by prisma.config.ts (DATABASE_URL)
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +9,131 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+enum Role {
+  ADMIN
+  CLIENT
+  FREELANCER
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       Role     @default(CLIENT)
+  phone      String?
+  profileImg String?
+  bio        String?
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  services Service[] @relation("FreelancerServices")
+  orders   Order[]   @relation("ClientOrders")
+  reviews  Review[]  @relation("ClientReviews")
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  icon        String?
+  isDeleted   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  services Service[]
+
+  @@map("categories")
+}
+
+model Service {
+  id           String        @id @default(uuid())
+  title        String
+  description  String
+  price        Decimal       @db.Decimal(10, 2)
+  deliveryDays Int
+  thumbnail    String?
+  status       ServiceStatus @default(ACTIVE)
+  isDeleted    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  categoryId   String
+  category     Category      @relation(fields: [categoryId], references: [id])
+
+  freelancerId String
+  freelancer   User          @relation("FreelancerServices", fields: [freelancerId], references: [id])
+
+  orders  Order[]
+  reviews Review[]
+
+  @@index([categoryId])
+  @@index([freelancerId])
+  @@map("services")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  status      OrderStatus @default(PENDING)
+  totalPrice  Decimal     @db.Decimal(10, 2)
+  requirement String?
+  isDeleted   Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  clientId  String
+  client    User     @relation("ClientOrders", fields: [clientId], references: [id])
+
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id])
+
+  review Review?
+
+  @@index([clientId])
+  @@index([serviceId])
+  @@map("orders")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clientId  String
+  client    User     @relation("ClientReviews", fields: [clientId], references: [id])
+
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id])
+
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  @@index([serviceId])
+  @@map("reviews")
 }
