@@ -23,8 +23,10 @@ const publicUserSelect = {
 
 type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;
 
-const toPublicUser = (user: { password: string } & PublicUser): PublicUser => {
-  const { password: _password, ...publicUser } = user;
+const toPublicUser = (
+  user: { password: string; isDeleted: boolean } & PublicUser
+): PublicUser => {
+  const { password: _password, isDeleted: _isDeleted, ...publicUser } = user;
   return publicUser;
 };
 
