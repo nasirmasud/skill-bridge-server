@@ -7,10 +7,19 @@ export interface JwtPayload {
   role: string;
 }
 
-const JWT_EXPIRES_IN = "7d";
+const ACCESS_TOKEN_EXPIRES_IN = "7d";
+const REFRESH_TOKEN_EXPIRES_IN = "30d";
 
-export const signToken = (payload: JwtPayload): string => {
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+export const signAccessToken = (payload: JwtPayload): string => {
+  return jwt.sign(payload, env.JWT_SECRET, {
+    expiresIn: ACCESS_TOKEN_EXPIRES_IN,
+  });
+};
+
+export const signRefreshToken = (payload: JwtPayload): string => {
+  return jwt.sign(payload, env.JWT_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+  });
 };
 
 export const verifyToken = (token: string): JwtPayload => {
