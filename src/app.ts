@@ -3,6 +3,7 @@ import express from "express";
 import { env } from "./config/env";
 import { sendResponse } from "./lib/sendResponse";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
+import routes from "./routes";
 import { ApiError } from "./utils/ApiError";
 
 const app = express();
@@ -17,6 +18,8 @@ app.use(express.json());
 app.get("/health", (_req, res) => {
   sendResponse(res, 200, "Skillbridge API is running", null);
 });
+
+app.use("/api", routes);
 
 app.use((req, _res, next) => {
   next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`));
