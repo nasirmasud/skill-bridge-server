@@ -2,6 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import { Prisma } from "../../generated/prisma/client";
 import { ApiError } from "../utils/ApiError";
 
+const isBodyParserError = (err: Error): err is Error & { status?: number; type?: string } =>
+  err instanceof SyntaxError && "status" in err;
+
 export const errorHandler = (
   err: Error | ApiError,
   _req: Request,
@@ -13,6 +16,16 @@ export const errorHandler = (
       success: false,
       message: err.message,
       errorSources: err.errorSources,
+    });
+  }
+
+  if (isBodyParserError(err)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid request body",
+      errorSources: [
+        { path: "body", message: "Request body must be valid JSON" },
+      ],
     });
   }
 
