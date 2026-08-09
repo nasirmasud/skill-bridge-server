@@ -36,22 +36,25 @@ enum ServiceStatus {
 // ==================== MODELS ====================
 
 model User {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   name       String
-  email      String   @unique
-  password   String
-  role       Role     @default(CLIENT)
+  email      String    @unique
+  password   String?
+  provider   String?
+  socialId   String?
+  role       Role      @default(CLIENT)
   phone      String?
   profileImg String?
   bio        String?
-  isDeleted  Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  isDeleted  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   services Service[] @relation("FreelancerServices")
   orders   Order[]   @relation("ClientOrders")
   reviews  Review[]  @relation("ClientReviews")
 
+  @@unique([provider, socialId])
   @@map("users")
 }
 
