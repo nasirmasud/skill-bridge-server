@@ -24,9 +24,20 @@ const publicUserSelect = {
 type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;
 
 const toPublicUser = (
-  user: { password: string; isDeleted: boolean } & PublicUser
+  user: {
+    password: string | null;
+    isDeleted: boolean;
+    provider: string | null;
+    socialId: string | null;
+  } & PublicUser
 ): PublicUser => {
-  const { password: _password, isDeleted: _isDeleted, ...publicUser } = user;
+  const {
+    password: _password,
+    isDeleted: _isDeleted,
+    provider: _provider,
+    socialId: _socialId,
+    ...publicUser
+  } = user;
   return publicUser;
 };
 
@@ -89,6 +100,13 @@ export const loginUser = async (data: { email: string; password: string }) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
+  if (!user.password) {
+    throw new ApiError(
+      401,
+      "This account uses social login. Sign in with Google or GitHub instead"
+    );
+  }
+
   const isPasswordMatch = await comparePassword(data.password, user.password);
 
   if (!isPasswordMatch) {
@@ -98,6 +116,68 @@ export const loginUser = async (data: { email: string; password: string }) => {
   return {
     user: toPublicUser(user),
     ...signTokens(user),
+  };
+};
+
+export const loginWithSocial = async (data: {
+  provider: "GOOGLE" | "GITHUB";
+  socialId: string;
+  email?: string | null;
+  name: string;
+  profileImg?: string | null;
+}) => {
+  const fallbackEmail = `${data.provider.toLowerCase()}-${data.socialId}@social.local`;
+
+  const existingByIdentity = await prisma.user.findFirst({
+    where: { provider: data.provider, socialId: data.socialId },
+  });
+
+  if (existingByIdentity) {
+    if (existingByIdentity.isDeleted) {
+      throw new ApiError(401, "This account has been deactivated");
+    }
+    return {
+      user: toPublicUser(existingByIdentity),
+      ...signTokens(existingByIdentity),
+    };
+  }
+
+  if (data.email) {
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingByEmail) {
+      if (existingByEmail.isDeleted) {
+        throw new ApiError(401, "This account has been deactivated");
+      }
+      const linked = await prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: { provider: data.provider, socialId: data.socialId },
+      });
+      return {
+        user: toPublicUser(linked),
+        ...signTokens(linked),
+      };
+    }
+  }
+
+  const created = await prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email ?? fallbackEmail,
+      password: null,
+      role: "CLIENT",
+      provider: data.provider,
+      socialId: data.socialId,
+      profileImg: data.profileImg,
+    },
+    select: publicUserSelect,
+  });
+
+  return {
+    user: created,
+    ...signTokens(created),
   };
 };
 
