@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import { env } from "./config/env";
 import { sendResponse } from "./lib/sendResponse";
+import passport from "./lib/passport";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import routes from "./routes";
 import { ApiError } from "./utils/ApiError";
@@ -14,6 +15,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(passport.initialize());
 
 app.get("/health", (_req, res) => {
   sendResponse(res, 200, "Skillbridge API is running", null);
