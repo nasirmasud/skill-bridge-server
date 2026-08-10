@@ -18,6 +18,12 @@ interface CreateServiceData {
   deliveryDays: number;
   categoryId: string;
   thumbnail?: string;
+  gallery?: string[];
+  tools?: string[];
+  highlights?: string[];
+  whatYouGet?: string[];
+  packageName?: string;
+  packageFeatures?: string[];
   status?: "ACTIVE" | "INACTIVE" | "DRAFT";
 }
 
@@ -60,6 +66,12 @@ export const createService = async (
       price: data.price,
       deliveryDays: data.deliveryDays,
       thumbnail: data.thumbnail,
+      gallery: data.gallery ?? [],
+      tools: data.tools ?? [],
+      highlights: data.highlights ?? [],
+      whatYouGet: data.whatYouGet ?? [],
+      packageName: data.packageName,
+      packageFeatures: data.packageFeatures ?? [],
       status: data.status ?? "ACTIVE",
       categoryId: data.categoryId,
       freelancerId,
@@ -95,7 +107,7 @@ export const getAllServices = async (query: ServiceQuery) => {
     where.price = priceFilter;
   }
 
-  const [total, data] = await Promise.all([
+  const [total, data, serviceIds] = await Promise.all([
     prisma.service.count({ where }),
     prisma.service.findMany({
       where,
@@ -108,9 +120,28 @@ export const getAllServices = async (query: ServiceQuery) => {
         _count: { select: { reviews: true } },
       },
     }),
+    prisma.service.findMany({ where, select: { id: true } }),
   ]);
 
-  return { meta: { page, limit, total }, data };
+  const ratingAgg = serviceIds.length
+    ? await prisma.review.groupBy({
+        by: ["serviceId"],
+        where: {
+          serviceId: { in: serviceIds.map((s) => s.id) },
+          isDeleted: false,
+        },
+        _avg: { rating: true },
+      })
+    : [];
+
+  const ratingMap = new Map(ratingAgg.map((r) => [r.serviceId, r._avg.rating]));
+
+  const enriched = data.map((service) => ({
+    ...service,
+    avgRating: ratingMap.get(service.id) ?? 0,
+  }));
+
+  return { meta: { page, limit, total }, data: enriched };
 };
 
 export const getServiceById = async (id: string) => {

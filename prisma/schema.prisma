@@ -79,6 +79,12 @@ model Service {
   price        Decimal       @db.Decimal(10, 2)
   deliveryDays Int
   thumbnail    String?
+  gallery      String[]      @default([])
+  tools        String[]      @default([])
+  highlights   String[]      @default([])
+  whatYouGet   String[]      @default([])
+  packageName  String?
+  packageFeatures String[]   @default([])
   status       ServiceStatus @default(ACTIVE)
   isDeleted    Boolean       @default(false)
   createdAt    DateTime      @default(now())

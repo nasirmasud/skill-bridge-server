@@ -20,10 +20,22 @@ export const createCategory = async (data: {
 };
 
 export const getAllCategories = async () => {
-  return prisma.category.findMany({
+  const categories = await prisma.category.findMany({
     where: { isDeleted: false },
     orderBy: { name: "asc" },
+    include: {
+      _count: {
+        select: {
+          services: { where: { isDeleted: false, status: "ACTIVE" } },
+        },
+      },
+    },
   });
+
+  return categories.map((c) => ({
+    ...c,
+    serviceCount: c._count.services,
+  }));
 };
 
 export const getCategoryById = async (id: string) => {
