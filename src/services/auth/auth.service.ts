@@ -125,6 +125,7 @@ export const loginWithSocial = async (data: {
   email?: string | null;
   name: string;
   profileImg?: string | null;
+  role?: "CLIENT" | "FREELANCER";
 }) => {
   const fallbackEmail = `${data.provider.toLowerCase()}-${data.socialId}@social.local`;
 
@@ -167,7 +168,7 @@ export const loginWithSocial = async (data: {
       name: data.name,
       email: data.email ?? fallbackEmail,
       password: null,
-      role: "CLIENT",
+      role: data.role ?? "CLIENT",
       provider: data.provider,
       socialId: data.socialId,
       profileImg: data.profileImg,
