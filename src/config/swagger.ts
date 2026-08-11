@@ -10,8 +10,14 @@ const options: Options = {
       contact: { name: "Skillbridge Team" },
     },
     servers: [
-      { url: "http://localhost:5000", description: "Local development server" },
-      { url: "http://localhost:5000/api", description: "API base path" },
+      {
+        url: "https://skill-bridge-server-s2o3.onrender.com",
+        description: "Production Server",
+      },
+      {
+        url: "http://localhost:5000",
+        description: "Local development server",
+      },
     ],
     components: {
       securitySchemes: {
