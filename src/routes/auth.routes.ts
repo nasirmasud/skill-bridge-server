@@ -31,9 +31,13 @@ const startOAuth = (provider: "google" | "github") => {
         null
       );
     }
+    const role = req.query.role as "CLIENT" | "FREELANCER" | undefined;
     passport.authenticate(
       provider,
-      provider === "google" ? { scope: ["profile", "email"] } : { scope: ["user:email"] }
+      {
+        scope: provider === "google" ? ["profile", "email"] : ["user:email"],
+        state: role,
+      } as any
     )(req, res, next);
   };
 };
@@ -74,10 +78,17 @@ function oauthCallbackRoute(provider: "google" | "github") {
  * /api/auth/google:
  *   get:
  *     summary: Initiate Google OAuth
- *     description: Redirects to Google for authentication. Requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to be set in the environment. Returns 503 if Google OAuth is not configured.
+ *     description: Redirects to Google for authentication. Requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to be set in the environment. Returns 503 if Google OAuth is not configured. The `role` query parameter determines the user's role for new accounts.
  *     tags:
  *       - Auth
  *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [CLIENT, FREELANCER]
+ *         description: Role to assign to new users created via OAuth
  *     responses:
  *       302:
  *         description: Redirect to Google OAuth consent page
@@ -127,10 +138,17 @@ router.get("/google/callback", oauthCallbackRoute("google"));
  * /api/auth/github:
  *   get:
  *     summary: Initiate GitHub OAuth
- *     description: Redirects to GitHub for authentication. Requires GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET to be set in the environment. Returns 503 if GitHub OAuth is not configured.
+ *     description: Redirects to GitHub for authentication. Requires GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET to be set in the environment. Returns 503 if GitHub OAuth is not configured. The `role` query parameter determines the user's role for new accounts.
  *     tags:
  *       - Auth
  *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [CLIENT, FREELANCER]
+ *         description: Role to assign to new users created via OAuth
  *     responses:
  *       302:
  *         description: Redirect to GitHub OAuth consent page
