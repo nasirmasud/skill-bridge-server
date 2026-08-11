@@ -92,7 +92,10 @@ export const updateUser = async (
   });
 };
 
-export const softDeleteUser = async (id: string) => {
+export const softDeleteUser = async (
+  id: string,
+  actor: { id: string; role: string }
+) => {
   const target = await prisma.user.findFirst({
     where: { id, isDeleted: false },
   });
@@ -101,6 +104,10 @@ export const softDeleteUser = async (id: string) => {
     throw new ApiError(404, "User not found", [
       { path: "id", message: "No user found with this id" },
     ]);
+  }
+
+  if (target.role === "ADMIN") {
+    throw new ApiError(403, "Admin accounts cannot be deleted");
   }
 
   return prisma.user.update({
