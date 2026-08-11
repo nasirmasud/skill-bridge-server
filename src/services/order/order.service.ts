@@ -10,6 +10,7 @@ const serviceSelect = {
   price: true,
   thumbnail: true,
   status: true,
+  category: { select: { id: true, name: true, icon: true } },
   freelancer: { select: { id: true, name: true, profileImg: true } },
 } satisfies Prisma.ServiceSelect;
 
