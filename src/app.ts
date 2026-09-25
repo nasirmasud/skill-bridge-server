@@ -5,6 +5,7 @@ import { env } from "./config/env";
 import { swaggerSpec } from "./config/swagger";
 import { sendResponse } from "./lib/sendResponse";
 import passport from "./lib/passport";
+import { trackDbActivity } from "./lib/dbKeepAlive";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import routes from "./routes";
 import { ApiError } from "./utils/ApiError";
@@ -68,6 +69,7 @@ app.get("/health", (_req, res) => {
   sendResponse(res, 200, "Skillbridge API is running", null);
 });
 
+app.use("/api", trackDbActivity());
 app.use("/api", routes);
 
 app.use((req, _res, next) => {
